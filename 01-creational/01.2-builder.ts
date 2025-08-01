@@ -11,7 +11,7 @@
  * * que lo componen.
  */
 
-import { COLORS } from '../helpers/colors.ts';
+import { COLORS } from "../helpers/colors.ts";
 
 //! Tarea: crear un QueryBuilder para construir consultas SQL
 /**
@@ -22,7 +22,7 @@ import { COLORS } from '../helpers/colors.ts';
  * - orderBy(field: string, order: string): QueryBuilder - opcional
  * - limit(limit: number): QueryBuilder - opcional
  * - execute(): string - retorna la consulta SQL
- * 
+ *
  ** Ejemplo de uso:
   const usersQuery = new QueryBuilder("users") // users es el nombre de la tabla
     .select("id", "name", "email")
@@ -50,37 +50,61 @@ class QueryBuilder {
   }
 
   select(...fields: string[]): QueryBuilder {
-    throw new Error('Method not implemented.');
+    if (fields?.length === 0 || typeof fields === "undefined") {
+      this.fields.push("*");
+    } else if (fields.length === 1) {
+      this.fields.push(fields[0]);
+    } else {
+      fields.map((item, idx) => {
+        if (fields.length - 1 === idx) return this.fields.push(item);
+        else return this.fields.push(`${item}, `);
+      });
+    }
+    return this;
   }
 
-  where(condition: string): QueryBuilder {
-    throw new Error('Method not implemented.');
+  where(condition?: string): QueryBuilder {
+    if (!condition) return this;
+
+    if (this.conditions.length > 0) this.conditions.push(` and ${condition}`);
+    else this.conditions = [condition];
+    return this;
   }
 
-  orderBy(field: string, direction: 'ASC' | 'DESC' = 'ASC'): QueryBuilder {
-    throw new Error('Method not implemented.');
+  orderBy(field: string, direction: "ASC" | "DESC" = "ASC"): QueryBuilder {
+    if (!field) return this;
+    if (this.orderFields.length > 0)
+      this.orderFields.push(`, ${field} ${direction}`);
+    else this.orderFields.push(`${field} ${direction}`);
+
+    return this;
   }
 
-  limit(count: number): QueryBuilder {
-    throw new Error('Method not implemented.');
+  limit(count?: number): QueryBuilder {
+    this.limitCount = count;
+    return this;
   }
 
   execute(): string {
     // Select id, name, email from users where age > 18 and country = 'Cri' order by name ASC limit 10;
-    throw new Error('Method not implemented.');
+    return `Select ${this.fields.join("")} from ${
+      this.table
+    } where ${this.conditions.join("")} order by ${this.orderFields.join("")} ${
+      this.limitCount ? `limit ${this.limitCount}` : ""
+    }`;
   }
 }
 
 function main() {
-  const usersQuery = new QueryBuilder('users')
-    .select('id', 'name', 'email')
-    .where('age > 18')
+  const usersQuery: string = new QueryBuilder("users")
+    .select("id", "name", "email")
+    .where("age > 18")
     .where("country = 'Cri'") // Esto debe de hacer una condición AND
-    .orderBy('name', 'ASC')
+    .orderBy("name", "ASC")
     .limit(10)
     .execute();
 
-  console.log('%cConsulta:\n', COLORS.red);
+  console.log("%cConsulta:\n", COLORS.red);
   console.log(usersQuery);
 }
 
